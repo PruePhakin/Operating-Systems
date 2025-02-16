@@ -3,5 +3,13 @@ name = "vssh"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "vssh"
+path = "src/bin/vssh.rs"
+
+[lib]
+name = "cmd"
+path = "src/lib.rs"
+
 [dependencies]
-nix = { version = "0.29.0", features = ["default", "process"] }
+nix = { version = "0.29.0", features = ["process", "fs"] }
