@@ -1,7 +1,6 @@
 use std::env;
 use std::io::{self, Write};
 use cmd;
-use nix::unistd::dup2;
 
 
 fn main()
@@ -21,7 +20,6 @@ fn main()
         // Trim whitespaces, then parse words seperated by whitespaces and then store into arguments
         let arguments: Vec<&str> = input.trim().split_whitespace().collect();
 
-
         // Get the command
         let command = arguments.first().unwrap_or(&"");
         //3 cases background process, pipelines and redirection
@@ -37,9 +35,7 @@ fn main()
                 cmd::shell_command(arguments);
             }
             _ => {
-                if let Err(e) = cmd::external_command(arguments) {
-                    eprintln!("Error executing external command: {}", e);
-                }
+                cmd::external_command(arguments);
             }
         }
 
