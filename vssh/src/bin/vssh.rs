@@ -10,7 +10,7 @@ fn main()
     {
         // Print the current directory
         let current_dir = env::current_dir().expect("Failed to get current directory");
-        print!("{}$ ", current_dir.display());
+        print!("\n{}$ ", current_dir.display());
         io::stdout().flush().expect("Failed to flush stdout");
 
         // Get user command and clean it up

@@ -191,20 +191,28 @@ fn handle_pipeline(args: Vec<&str>) -> Result<(), Error> {
     // First, separate redirection from the command arguments
     let mut commands: Vec<Vec<&str>> = Vec::new();
     let mut current_command: Vec<&str> = Vec::new();
+    let mut input_file: Option<&str> = None;
     let mut output_file: Option<&str> = None;
     
     let mut i = 0;
     // Iterate over the arguments
     while i < args.len() {
         match args[i] {
-            // Parses out the commands seperated by pipes
+            // Parses out the commands separated by pipes
             "|" => {
                 if !current_command.is_empty() {
                     commands.push(current_command);
                     current_command = Vec::new();
                 }
             }
-            // Assigns the output file after redirection
+            // Assigns the input file for redirection
+            "<" => {
+                if i + 1 < args.len() {
+                    input_file = Some(args[i + 1]);
+                    i += 1;
+                }
+            }
+            // Assigns the output file for redirection
             ">" => {
                 if i + 1 < args.len() {
                     output_file = Some(args[i + 1]);
@@ -241,6 +249,12 @@ fn handle_pipeline(args: Vec<&str>) -> Result<(), Error> {
         // Set up stdin from previous command's output if it exists
         if let Some(prev_stdout) = previous_stdout.take() {
             cmd.stdin(Stdio::from(prev_stdout));
+        } else if i == 0 {
+            // First command: handle input redirection if specified
+            if let Some(infile) = input_file {
+                let file = File::open(infile)?;
+                cmd.stdin(Stdio::from(file));
+            }
         }
 
         // Set up stdout
