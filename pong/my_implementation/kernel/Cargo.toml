@@ -1,0 +1,18 @@
+[package]
+name = "kernel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Allows kernel to use bootloader crate and boot off it
+bootloader_api = "0.11.10"
+# Import panic method so we don't need to implement
+panic-halt = "1.0.0"
+
+# Specify method of panic in development environment
+[profile.dev]
+panic = "abort"
+
+# Specify method of panic in release version
+[profile.release]
+panic = "abort"

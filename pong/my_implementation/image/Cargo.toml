@@ -1,0 +1,19 @@
+[package]
+name = "image"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+# Using bootloader dependancy for building
+bootloader = "0.11.10"
+
+[unstable]
+# Enable unstable features
+bindeps = true
+
+# Specify the kernel as a dependancy when building
+# Will automatically build the kernel directory as x86_64-unknown-none
+kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
+
+[dependencies]
+

@@ -1,0 +1,8 @@
+# Top-level configuration to define kernel and image to be in the same workspace
+
+[workspace]
+members = [
+    "kernel",
+    "image",
+]
+resolver = "2"

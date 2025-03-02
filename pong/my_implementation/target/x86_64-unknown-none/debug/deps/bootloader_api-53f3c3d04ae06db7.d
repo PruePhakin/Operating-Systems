@@ -1,0 +1,11 @@
+/home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/deps/libbootloader_api-53f3c3d04ae06db7.rmeta: /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/config.rs /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/info.rs /home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/concat.rs /home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/version_info.rs
+
+/home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/deps/bootloader_api-53f3c3d04ae06db7.d: /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/config.rs /home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/info.rs /home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/concat.rs /home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/version_info.rs
+
+/home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/lib.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/config.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bootloader_api-0.11.10/src/info.rs:
+/home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/concat.rs:
+/home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out/version_info.rs:
+
+# env-dep:OUT_DIR=/home/pruephakin/Operating-Systems/pong/my_implementation/target/x86_64-unknown-none/debug/build/bootloader_api-d50e808c0b9dd3b5/out
