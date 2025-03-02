@@ -1,0 +1,9 @@
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/x86_64-unknown-none/debug/deps/librustls_pki_types-9317cef1d0be144a.rmeta: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/alg_id.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/base64.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/server_name.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/pem.rs
+
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/x86_64-unknown-none/debug/deps/rustls_pki_types-9317cef1d0be144a.d: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/alg_id.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/base64.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/server_name.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/pem.rs
+
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/lib.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/alg_id.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/base64.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/server_name.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-pki-types-1.11.0/src/pem.rs:

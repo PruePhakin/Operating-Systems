@@ -1,0 +1,11 @@
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/deps/libxattr-816b0e6d873399c4.rmeta: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/error.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/mod.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/util.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/linux_macos.rs
+
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/deps/libxattr-816b0e6d873399c4.rlib: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/error.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/mod.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/util.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/linux_macos.rs
+
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/deps/xattr-816b0e6d873399c4.d: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/error.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/mod.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/util.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/linux_macos.rs
+
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/lib.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/error.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/mod.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/util.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.4.0/src/sys/linux_macos.rs:

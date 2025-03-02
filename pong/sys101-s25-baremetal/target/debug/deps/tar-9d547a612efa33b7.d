@@ -1,0 +1,12 @@
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/deps/libtar-9d547a612efa33b7.rmeta: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/archive.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/builder.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry_type.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/error.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/header.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/pax.rs
+
+/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/deps/tar-9d547a612efa33b7.d: /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/lib.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/archive.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/builder.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry_type.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/error.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/header.rs /home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/pax.rs
+
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/lib.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/archive.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/builder.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/entry_type.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/error.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/header.rs:
+/home/pruephakin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tar-0.4.43/src/pax.rs:
