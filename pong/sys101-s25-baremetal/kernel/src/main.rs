@@ -13,11 +13,12 @@ mod gdt;
 
 
 use alloc::boxed::Box;
+use x86_64::structures::paging::frame;
 use core::fmt::Write;
 use core::slice;
 use bootloader_api::{entry_point, BootInfo, BootloaderConfig};
 use bootloader_api::config::Mapping::Dynamic;
-use bootloader_api::info::MemoryRegionKind;
+use bootloader_api::info::{FrameBufferInfo, MemoryRegionKind};
 use kernel::{HandlerTable, serial};
 use pc_keyboard::DecodedKey;
 use x86_64::registers::control::Cr3;
@@ -36,16 +37,26 @@ const BOOTLOADER_CONFIG: BootloaderConfig = {
 entry_point!(kernel_main, config = &BOOTLOADER_CONFIG);
 
 
+// Static variable to store frame buffer info
+static mut FRAME_INFO: Option<FrameBufferInfo> = None;
+
 // Entry point
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
+
+
     writeln!(serial(), "Entered kernel with boot info: {boot_info:?}").unwrap();
     writeln!(serial(), "Frame Buffer: {:p}", boot_info.framebuffer.as_ref().unwrap().buffer()).unwrap();
+    
 
-// Initialize the screen
+    // Initialize the screen
     let frame_info = boot_info.framebuffer.as_ref().unwrap().info();
+    // Store frame_info in static variable
+    unsafe {
+        FRAME_INFO = Some(frame_info.clone());
+    }
     let framebuffer = boot_info.framebuffer.as_mut().unwrap();
     screen::init(framebuffer);
-    
+        
     for r in boot_info.memory_regions.iter() {
         writeln!(serial(), "{:?} {:?} {:?} {}", r, r.start as *mut u8, r.end as *mut usize, r.end-r.start).unwrap();
     }
@@ -61,44 +72,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let vault = unsafe { slice::from_raw_parts_mut(ptr, 100) };
     vault[0] = 65;
     vault[1] = 66;
-    // writeln!(Writer, "{} {}", vault[0] as char, vault[1] as char).unwrap();
-
-
-
-    // print out screen size 1280x800
-    writeln!(screenwriter(), "Screen size: {}x{}", frame_info.width, frame_info.height).unwrap();
-
-    // Draw top and bottom borders
-    for i in 0..15 {
-        for j in 0..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-    for i in frame_info.height-20..frame_info.height {
-        for j in 0..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-
-    // Draw left and right borders
-    for i in 0..frame_info.height {
-        for j in 0..15 {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-    for i in 0..frame_info.height {
-        for j in frame_info.width-15..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-
-    // Draw dotted center line
-    for i in 0..frame_info.height {
-        if i % 10 == 0 {
-            screenwriter().draw_pixel(frame_info.width / 2, i, 0xff, 0xff, 0xff);
-        }
-    }
-
+    writeln!(Writer, "{} {}", vault[0] as char, vault[1] as char).unwrap();
 
     
     //read CR3 for current page table
@@ -125,6 +99,8 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     
     writeln!(serial(), "Starting kernel...").unwrap();
 
+    start();
+
     // Interrupt descriptor table that will loop while handling interrupts
     let lapic_ptr = interrupts::init_apic(rsdp.expect("Failed to get RSDP address") as usize, physical_offset, &mut mapper, &mut frame_allocator);
     HandlerTable::new()
@@ -132,10 +108,51 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
         .timer(tick)
         .startup(start)
         .start(lapic_ptr);
+
 }
 
+// Game implementation in here, start for initialization, tick for game loop, key for keyboard input
 fn start() {
     writeln!(Writer, "Hello, world!").unwrap();
+
+    // Access the static frame_info
+    let frame_info = unsafe { 
+        FRAME_INFO.expect("Frame info not initialized")
+    };
+
+    // print out screen size 1280x800
+    writeln!(serial(), "Screen size: {}x{}", frame_info.width, frame_info.height).unwrap();
+
+    // Draw top and bottom 
+    for i in 0..15 {
+        for j in 0..frame_info.width {
+            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
+        }
+    }
+    for i in frame_info.height-20..frame_info.height {
+        for j in 0..frame_info.width {
+            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
+        }
+    }
+    // Draw left and right borders
+    for i in 0..frame_info.height {
+        for j in 0..15 {
+            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
+        }
+    }
+    for i in 0..frame_info.height {
+        for j in frame_info.width-15..frame_info.width {
+            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
+        }
+    }
+    // Draw dotted center line
+    for i in 0..frame_info.height {
+        if i % 10 == 0 {
+            screenwriter().draw_pixel(frame_info.width / 2, i, 0xff, 0xff, 0xff);
+        }
+    }
+
+    
 }
 
 fn tick() {
