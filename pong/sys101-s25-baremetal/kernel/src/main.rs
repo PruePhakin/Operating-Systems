@@ -15,6 +15,7 @@ mod gdt;
 use alloc::boxed::Box;
 use x86_64::structures::paging::frame;
 use core::fmt::Write;
+use core::panic::Location;
 use core::slice;
 use bootloader_api::{entry_point, BootInfo, BootloaderConfig};
 use bootloader_api::config::Mapping::Dynamic;
@@ -111,9 +112,52 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 
 }
 
+// Player 
+pub struct PLAYER {
+    anchor_point_x: usize,
+    anchor_point_y: usize,
+    hitbox_x: usize,
+    hitbox_y: usize,
+}
+impl PLAYER {
+
+    // Initialize player
+    // Anchor is top left corner of player
+    pub fn new(anchor_x: usize, anchor_y: usize) -> Self {
+        PLAYER {
+            anchor_point_x: anchor_x,
+            anchor_point_y: anchor_y,
+            hitbox_x: 10,
+            hitbox_y: 90,
+        }
+    }
+
+    // Draw player
+    pub fn initialize_player(&mut self) {
+        for i in self.anchor_point_x..self.anchor_point_x+self.hitbox_x {
+            for j in self.anchor_point_y..self.anchor_point_y+self.hitbox_y {
+                screenwriter().draw_pixel(i, j, 0xff, 0xff, 0xff);
+            }
+        }
+    }
+}
+
+// Ball
+pub struct BALL {
+    hitbox_x: i32,
+    hitbox_y: i32,
+}
+impl BALL {
+    pub fn new() -> BALL {
+        BALL {
+            hitbox_x: 0,
+            hitbox_y: 0,
+        }
+    }
+}
+
 // Game implementation in here, start for initialization, tick for game loop, key for keyboard input
 fn start() {
-    writeln!(Writer, "Hello, world!").unwrap();
 
     // Access the static frame_info
     let frame_info = unsafe { 
@@ -123,23 +167,25 @@ fn start() {
     // print out screen size 1280x800
     writeln!(serial(), "Screen size: {}x{}", frame_info.width, frame_info.height).unwrap();
 
-    // Draw top and bottom 
+    // Draw top border
     for i in 0..15 {
         for j in 0..frame_info.width {
             screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
         }
     }
+    // Draw bottom border
     for i in frame_info.height-20..frame_info.height {
         for j in 0..frame_info.width {
             screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
         }
     }
-    // Draw left and right borders
+    // Draw left border
     for i in 0..frame_info.height {
         for j in 0..15 {
             screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
         }
     }
+    // Draw right border
     for i in 0..frame_info.height {
         for j in frame_info.width-15..frame_info.width {
             screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
@@ -152,7 +198,12 @@ fn start() {
         }
     }
 
-    
+
+    // Initialize game objects
+    let mut player1 = PLAYER::new(1200, 300);
+    player1.initialize_player();
+
+
 }
 
 fn tick() {
