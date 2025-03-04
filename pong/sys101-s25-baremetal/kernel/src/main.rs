@@ -21,11 +21,13 @@ use bootloader_api::{entry_point, BootInfo, BootloaderConfig};
 use bootloader_api::config::Mapping::Dynamic;
 use bootloader_api::info::{FrameBufferInfo, MemoryRegionKind};
 use kernel::{HandlerTable, serial};
-use pc_keyboard::DecodedKey;
+use pc_keyboard::{DecodedKey, KeyCode};
 use x86_64::registers::control::Cr3;
 use x86_64::VirtAddr;
 use crate::frame_allocator::BootInfoFrameAllocator;
 use crate::screen::{Writer, screenwriter};
+
+use spin::Mutex;
 
 // Define the bootloader configuration
 const BOOTLOADER_CONFIG: BootloaderConfig = {
@@ -37,9 +39,6 @@ const BOOTLOADER_CONFIG: BootloaderConfig = {
 // Define the entry point to be kernel_main
 entry_point!(kernel_main, config = &BOOTLOADER_CONFIG);
 
-
-// Static variable to store frame buffer info
-static mut FRAME_INFO: Option<FrameBufferInfo> = None;
 
 // Entry point
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
@@ -92,7 +91,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     gdt::init();
 
     // print out values from heap allocation
-    let x = Box::new(42);
+    let x = Box::new(42);   
     let y = Box::new(24);
     writeln!(Writer, "x + y = {}", *x + *y).unwrap();
     writeln!(Writer, "{x:#p} {:?}", *x).unwrap();
@@ -133,13 +132,45 @@ impl PLAYER {
     }
 
     // Draw player
-    pub fn initialize_player(&mut self) {
+    pub fn draw_player(&mut self) {
         for i in self.anchor_point_x..self.anchor_point_x+self.hitbox_x {
             for j in self.anchor_point_y..self.anchor_point_y+self.hitbox_y {
                 screenwriter().draw_pixel(i, j, 0xff, 0xff, 0xff);
             }
         }
     }
+
+    // Move player up
+    pub fn move_player_up(&mut self) {
+        // Stop player from moving out of bounds
+        if self.anchor_point_y == 0{
+            return;
+        }
+        self.anchor_point_y -= 10;
+        // Redraw the previous position with black
+        for x in self.anchor_point_x..self.anchor_point_x+self.hitbox_x {
+            for y in self.anchor_point_y+90..self.anchor_point_y+100 {
+                screenwriter().draw_pixel(x, y, 0, 0, 0);
+            }
+        }
+    }
+
+    // Move player down
+    pub fn move_player_down(&mut self) {
+        // Stop player from moving out of bounds
+        if self.anchor_point_y == 710 {
+            return;
+        }
+        self.anchor_point_y += 10;
+
+        // Redraw the previous position with black
+        for x in self.anchor_point_x..self.anchor_point_x+self.hitbox_x {
+            for y in self.anchor_point_y-10..self.anchor_point_y {
+                screenwriter().draw_pixel(x, y, 0, 0, 0);
+            }
+        }
+    }
+
 }
 
 // Ball
@@ -156,6 +187,13 @@ impl BALL {
     }
 }
 
+// Static variable to store frame buffer info
+static mut FRAME_INFO: Option<FrameBufferInfo> = None;
+static PLAYER1: Mutex<Option<PLAYER>> = Mutex::new(None);
+static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
+static BALL: Mutex<Option<BALL>> = Mutex::new(None);
+
+
 // Game implementation in here, start for initialization, tick for game loop, key for keyboard input
 fn start() {
 
@@ -167,30 +205,6 @@ fn start() {
     // print out screen size 1280x800
     writeln!(serial(), "Screen size: {}x{}", frame_info.width, frame_info.height).unwrap();
 
-    // Draw top border
-    for i in 0..15 {
-        for j in 0..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-    // Draw bottom border
-    for i in frame_info.height-20..frame_info.height {
-        for j in 0..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-    // Draw left border
-    for i in 0..frame_info.height {
-        for j in 0..15 {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
-    // Draw right border
-    for i in 0..frame_info.height {
-        for j in frame_info.width-15..frame_info.width {
-            screenwriter().draw_pixel(j, i, 0xff, 0xff, 0xff);
-        }
-    }
     // Draw dotted center line
     for i in 0..frame_info.height {
         if i % 10 == 0 {
@@ -200,18 +214,60 @@ fn start() {
 
 
     // Initialize game objects
-    let mut player1 = PLAYER::new(1200, 300);
-    player1.initialize_player();
+    *PLAYER1.lock() = Some(PLAYER::new(70, 300));
+    *PLAYER2.lock() = Some(PLAYER::new(1200, 300));
+    *BALL.lock() = Some(BALL::new());
 
+    // Draw objects
+    if let Some(player1) = &mut *PLAYER1.lock() {
+        player1.draw_player();
+    }
+    if let Some(player2) = &mut *PLAYER2.lock() {
+        player2.draw_player();
+    }
 
 }
+
 
 fn tick() {
+
+
+
     write!(Writer, ".").unwrap();
+    write!(Writer, "-").unwrap();
 }
 
+// Keyboard input handler
 fn key(key: DecodedKey) {
     match key {
+        // Move player 1 up
+        DecodedKey::Unicode('w') => {
+            if let Some(player1) = &mut *PLAYER1.lock() {
+                player1.move_player_up();
+                player1.draw_player();
+            }
+        },
+        // Move player 1 down
+        DecodedKey::Unicode('s') => {
+            if let Some(player1) = &mut *PLAYER1.lock() {
+                player1.move_player_down();
+                player1.draw_player();
+            }
+        },
+        // Move player 2 up
+        DecodedKey::RawKey(KeyCode::ArrowUp) => {
+            if let Some(player2) = &mut *PLAYER2.lock() {
+                player2.move_player_up();
+                player2.draw_player();
+            }
+        },
+        // Move player 2 down  
+        DecodedKey::RawKey(KeyCode::ArrowDown) => {
+            if let Some(player2) = &mut *PLAYER2.lock() {
+                player2.move_player_down();
+                player2.draw_player();
+            }
+        },
         DecodedKey::Unicode(character) => write!(Writer, "{}", character).unwrap(),
         DecodedKey::RawKey(key) => write!(Writer, "{:?}", key).unwrap(),
     }
