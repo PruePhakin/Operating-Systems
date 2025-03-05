@@ -219,8 +219,9 @@ unsafe fn init_timer(lapic_pointer: *mut u32) {
         let tdcr = lapic_pointer.offset(APICOffset::Tdcr as isize / 4);
         tdcr.write_volatile(0x3); // Divide by 16 mode
 
+        // Set the initial value of the timer/tickrate
         let ticr = lapic_pointer.offset(APICOffset::Ticr as isize / 4);
-        ticr.write_volatile(0x0400_0000); // An arbitrary value for the initial value of the timer
+        ticr.write_volatile(0x0020_0000); // An arbitrary value for the initial value of the timer
     }
 }
 

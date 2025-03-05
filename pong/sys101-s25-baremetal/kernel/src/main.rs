@@ -124,6 +124,8 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 
  // Mutex to allow for safe access to game objects from different functions
 use spin::Mutex;
+// Random number generator crate
+use oorandom::Rand32;
 
 // Player 
 pub struct PLAYER {
@@ -189,178 +191,237 @@ impl PLAYER {
 
 }
 
-    // Determines how far the ball will move per tick
-    static STEP : usize = 5;
+// Determines how far the ball will move per tick
+static STEP : usize = 5;
 
-    // Ball
-    // Anchor is center of ball
-    // We will use a gradient to calculate the next position of the ball every frame. The axis_direction will determine if the ball is moving left or right (Right is true. left is false)
-    pub struct BALL {
-        anchor_point_x: usize,
-        anchor_point_y: usize,
-        hitbox_x: usize,
-        hitbox_y: usize,
-        trajectory_gradient: f32,
-        axis_direction: bool,
+// Ball
+// Anchor is center of ball
+// We will use a gradient to calculate the next position of the ball every frame. The axis_direction will determine if the ball is moving left or right (Right is true. left is false)
+pub struct BALL {
+    anchor_point_x: usize,
+    anchor_point_y: usize,
+    hitbox_x: usize,
+    hitbox_y: usize,
+    trajectory_gradient: i32,
+    axis_direction: bool,
+}
+impl BALL {
+
+    // Initialize ball
+    pub fn new() -> BALL {
+        BALL {
+            anchor_point_x: 640,
+            anchor_point_y: 400,
+            hitbox_x: 9,
+            hitbox_y: 9,
+
+            // Handles Pathing of ball
+            trajectory_gradient: random_gradient(),
+            axis_direction: random_direction(),
+        }
     }
-    impl BALL {
 
-        // Initialize ball
-        pub fn new() -> BALL {
-            BALL {
-                anchor_point_x: 640,
-                anchor_point_y: 400,
-                hitbox_x: 9,
-                hitbox_y: 9,
+    // Draw ball
+    pub fn draw_ball(&mut self) {
+        
+        let half_x = self.hitbox_x / 2;
+        let half_y = self.hitbox_y / 2;
 
-                // Handles Pathing of ball
-                trajectory_gradient: 1.0,
-                axis_direction: true,
+        // Draw ball around center point
+        for i in (self.anchor_point_x - half_x)..(self.anchor_point_x + half_x) {
+            for j in (self.anchor_point_y - half_y)..(self.anchor_point_y + half_y) {
+                screenwriter().draw_pixel(i, j, 0xff, 0xff, 0xff);
+            }
+        }
+    }
+
+    // Clear ball from screen
+    pub fn clear_ball(&mut self) {
+        let half_x = self.hitbox_x / 2;
+        let half_y = self.hitbox_y / 2;
+
+        // Draw ball around center point in black
+        for i in (self.anchor_point_x - half_x)..(self.anchor_point_x + half_x) {
+            for j in (self.anchor_point_y - half_y)..(self.anchor_point_y + half_y) {
+                screenwriter().draw_pixel(i, j, 0, 0, 0);
+            }
+        }
+    }
+
+
+    // Check collision with players and top/bottom of screen
+    pub fn check_collision(&mut self, player1: &PLAYER, player2: &PLAYER) {
+        let ball_left = self.anchor_point_x - (self.hitbox_x / 2);
+        let ball_right = self.anchor_point_x + (self.hitbox_x / 2);
+        let ball_top = self.anchor_point_y - (self.hitbox_y / 2);
+        let ball_bottom = self.anchor_point_y + (self.hitbox_y / 2);
+        
+        // For a STEP of 5, we need a larger buffer to catch collisions
+        let collision_buffer = 5;
+
+        // Check collision with player 1
+        let p1_left = player1.anchor_point_x;
+        let p1_right = player1.anchor_point_x + player1.hitbox_x;
+        let p1_top = player1.anchor_point_y;
+        let p1_bottom = player1.anchor_point_y + player1.hitbox_y;
+
+        // Check if ball overlaps with player 1 (with buffer for faster movement)
+        if ball_right + collision_buffer >= p1_left && ball_left <= p1_right + collision_buffer && 
+        ball_bottom >= p1_top && ball_top <= p1_bottom {
+            // Only bounce if ball is approaching from the right
+            if !self.axis_direction {
+                // Clear ball at current position
+                self.clear_ball();
+                
+                // Change direction
+                self.axis_direction = !self.axis_direction;
+                
+                // Make sure ball is not stuck inside paddle
+                self.anchor_point_x = p1_right + (self.hitbox_x / 2) + collision_buffer;
+                
+                // Redraw at new position
+                self.draw_ball();
             }
         }
 
-        // Draw ball
-        pub fn draw_ball(&mut self) {
-            
-            let half_x = self.hitbox_x / 2;
-            let half_y = self.hitbox_y / 2;
+        // Check collision with player 2
+        let p2_left = player2.anchor_point_x;
+        let p2_right = player2.anchor_point_x + player2.hitbox_x;
+        let p2_top = player2.anchor_point_y;
+        let p2_bottom = player2.anchor_point_y + player2.hitbox_y;
 
-            // Draw ball around center point
-            for i in (self.anchor_point_x - half_x)..(self.anchor_point_x + half_x) {
-                for j in (self.anchor_point_y - half_y)..(self.anchor_point_y + half_y) {
-                    screenwriter().draw_pixel(i, j, 0xff, 0xff, 0xff);
-                }
+        // Check if ball overlaps with player 2 (with buffer for faster movement)
+        if ball_right >= p2_left - collision_buffer && ball_left - collision_buffer <= p2_right && 
+        ball_bottom >= p2_top && ball_top <= p2_bottom {
+            // Only bounce if ball is approaching from the left
+            if self.axis_direction {
+                // Clear ball at current position
+                self.clear_ball();
+                
+                // Change direction
+                self.axis_direction = !self.axis_direction;
+                
+                // Make sure ball is not stuck inside paddle
+                self.anchor_point_x = p2_left - (self.hitbox_x / 2) - collision_buffer;
+                
+                // Redraw at new position
+                self.draw_ball();
             }
         }
 
-        // Clear ball from screen
-        pub fn clear_ball(&mut self) {
-            let half_x = self.hitbox_x / 2;
-            let half_y = self.hitbox_y / 2;
-
-            // Draw ball around center point in black
-            for i in (self.anchor_point_x - half_x)..(self.anchor_point_x + half_x) {
-                for j in (self.anchor_point_y - half_y)..(self.anchor_point_y + half_y) {
-                    screenwriter().draw_pixel(i, j, 0, 0, 0);
-                }
+        // Check collision with top of screen
+        if ball_top <= collision_buffer {
+            // Only bounce if ball is moving upward
+            if self.trajectory_gradient < 0 {
+                // Clear any artifacts
+                self.clear_ball();
+                
+                // Reverse trajectory
+                self.trajectory_gradient = -self.trajectory_gradient;
+                
+                // Ensure the ball doesn't get stuck at the top boundary
+                self.anchor_point_y = (self.hitbox_y / 2) + collision_buffer * 2;
+                
+                // Redraw at new position
+                self.draw_ball();
             }
         }
 
-
-
-        // Check collision with players and top/bottom of screen
-        pub fn check_collision(&mut self, player1: &PLAYER, player2: &PLAYER) {
-            let ball_left = self.anchor_point_x - (self.hitbox_x / 2);
-            let ball_right = self.anchor_point_x + (self.hitbox_x / 2);
-            let ball_top = self.anchor_point_y - (self.hitbox_y / 2);
-            let ball_bottom = self.anchor_point_y + (self.hitbox_y / 2);
-            
-            // Add a small buffer to improve collision detection with faster movement
-            let collision_buffer = STEP;
-
-            // Check collision with player 1
-            let p1_left = player1.anchor_point_x;
-            let p1_right = player1.anchor_point_x + player1.hitbox_x;
-            let p1_top = player1.anchor_point_y;
-            let p1_bottom = player1.anchor_point_y + player1.hitbox_y;
-
-            // Check if ball overlaps with player 1 (with buffer for faster movement)
-            if ball_right + collision_buffer >= p1_left && ball_left <= p1_right + collision_buffer && 
-            ball_bottom >= p1_top && ball_top <= p1_bottom {
-                // Only bounce if ball is approaching from the right
-                if !self.axis_direction {
-                    self.axis_direction = !self.axis_direction;
-                }
-            }
-
-            // Check collision with player 2
-            let p2_left = player2.anchor_point_x;
-            let p2_right = player2.anchor_point_x + player2.hitbox_x;
-            let p2_top = player2.anchor_point_y;
-            let p2_bottom = player2.anchor_point_y + player2.hitbox_y;
-
-            // Check if ball overlaps with player 2 (with buffer for faster movement)
-            if ball_right >= p2_left - collision_buffer && ball_left - collision_buffer <= p2_right && 
-            ball_bottom >= p2_top && ball_top <= p2_bottom {
-                // Only bounce if ball is approaching from the left
-                if self.axis_direction {
-                    self.axis_direction = !self.axis_direction;
-                }
-            }
-
-            // Check collision with top of screen
-            // Add a small buffer to ensure collision is detected with 2-pixel steps
-            if ball_top <= collision_buffer {
-                // Only bounce if ball is moving upward
-                if self.trajectory_gradient < 0.0 {
-                    self.trajectory_gradient = -self.trajectory_gradient;
-                    
-                    // Ensure the ball doesn't get stuck at the top boundary
-                    if ball_top < collision_buffer {
-                        self.anchor_point_y = (self.hitbox_y / 2) + collision_buffer;
-                    }
-                }
-            }
-
-            // Check collision with bottom of screen
-            if ball_bottom >= 800 - collision_buffer {
-                // Only bounce if ball is moving downward
-                if self.trajectory_gradient > 0.0 {
-                    self.trajectory_gradient = -self.trajectory_gradient;
-                    
-                    // Ensure the ball doesn't get stuck at the bottom boundary
-                    if ball_bottom > 800 - collision_buffer {
-                        self.anchor_point_y = 800 - (self.hitbox_y / 2) - collision_buffer;
-                    }
-                }
+        // Check collision with bottom of screen
+        if ball_bottom >= 800 - collision_buffer {
+            // Only bounce if ball is moving downward
+            if self.trajectory_gradient > 0 {
+                // Clear any artifacts
+                self.clear_ball();
+                
+                // Reverse trajectory
+                self.trajectory_gradient = -self.trajectory_gradient;
+                
+                // Ensure the ball doesn't get stuck at the bottom boundary
+                self.anchor_point_y = 800 - (self.hitbox_y / 2) - collision_buffer * 2;
+                
+                // Redraw at new position
+                self.draw_ball();
             }
         }
+    }
 
-        // Ball movement engine
-        // This function will move the ball center point towards the next position using the gradient value. It will also redraw the previous position with black and redraw ball.
-        pub fn update_ball(&mut self) {
-            // Remove the previous ball position
+    // Ball movement engine
+    // This function will move the ball center point towards the next position using the gradient value. It will also redraw the previous position with black and redraw ball.
+    pub fn update_ball(&mut self) {
+        // Remove the previous ball position
+        self.clear_ball();
+
+        // Move horizontally based on direction
+        if self.axis_direction {
+            self.anchor_point_x += STEP; 
+        } else {
+            self.anchor_point_x -= STEP;
+        }
+        
+        // Move vertically based on gradient (always add gradient regardless of direction)
+        // This ensures consistent vertical movement
+        if self.trajectory_gradient >= 0 {
+            self.anchor_point_y += self.trajectory_gradient as usize;
+        } else {
+            // For negative gradients, we need to convert to positive for usize subtraction
+            self.anchor_point_y -= (-self.trajectory_gradient) as usize;
+        }
+
+        // Draw the new ball position
+        self.draw_ball();
+    }
+
+    // Check if the ball has gone out of bounds and update score then reset ball position
+    pub fn check_score(&mut self) {
+        let ball_left = self.anchor_point_x - (self.hitbox_x / 2);
+        let ball_right = self.anchor_point_x + (self.hitbox_x / 2);
+        let collision_buffer = STEP;
+
+
+        // Check collision with left of screen
+        if ball_left <= collision_buffer {
+            // Player 1 scores
+            if let Some(player1) = &mut *PLAYER1.lock() {
+                player1.score += 1;
+            }
+            // Clear the old ball on screen
             self.clear_ball();
 
-            // Move horizontally based on direction
-            if self.axis_direction {
-                self.anchor_point_x += STEP; 
-            } else {
-                self.anchor_point_x -= STEP;
-            }
-            
-            // Move vertically based on gradient (always add gradient regardless of direction)
-            // This ensures consistent vertical movement
-            if self.trajectory_gradient >= 0.0 {
-                self.anchor_point_y += self.trajectory_gradient as usize;
-            } else {
-                // For negative gradients, we need to convert to positive for usize subtraction
-                self.anchor_point_y -= (-self.trajectory_gradient) as usize;
-            }
+            // Reset ball position
+            self.anchor_point_x = 640;
+            self.anchor_point_y = 400;
+            self.trajectory_gradient = random_gradient();
+            self.axis_direction = random_direction();
 
-            // Draw the new ball position
+            // Draw the new ball on screen
+            self.draw_ball();
+
+        }
+
+        // Check collision with right of screen
+        if ball_right >= 1280 - collision_buffer {
+            // Player 2 scores
+            if let Some(player2) = &mut *PLAYER2.lock() {
+                player2.score += 1;
+            }
+            // Clear the old ball on screen
+            self.clear_ball();
+
+            // Reset ball position
+            self.anchor_point_x = 640;
+            self.anchor_point_y = 400;
+            self.trajectory_gradient = random_gradient();
+            self.axis_direction = random_direction();
+
+            // Draw the new ball on screen
             self.draw_ball();
         }
 
-        pub fn check_score(&mut self) {
-            // Check if the ball has gone out of bounds
-            if self.anchor_point_x < 0 {
-                // Player 2 scores
-                // Reset ball position
-                self.anchor_point_x = 640;
-                self.anchor_point_y = 400;
-                self.trajectory_gradient = 1.0;
-                self.axis_direction = true;
-            } else if self.anchor_point_x > 1280 {
-                // Player 1 scores
-                // Reset ball position
-                self.anchor_point_x = 640;
-                self.anchor_point_y = 400;
-                self.trajectory_gradient = 1.0;
-                self.axis_direction = false;
-            }
-        }
     }
+}
+
+
 
 // Static variable to store frame buffer info
 static mut FRAME_INFO: Option<FrameBufferInfo> = None;
@@ -369,8 +430,45 @@ static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
 static BALL: Mutex<Option<BALL>> = Mutex::new(None);
 
 
+static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
+
+// Function to generate random numbers in range [-5, -1] or [1, 5] using oorandom
+pub fn random_gradient() -> i32 {
+    if let Some(rng) = &mut *RNG.lock() {
+        // First decide if positive or negative (0 = negative, 1 = positive)
+        let sign = (rng.rand_u32() % 2) as i32;
+        
+        // Generate number between 1 and 5
+        let magnitude = ((rng.rand_u32() % 5) + 1) as i32;
+        
+        // Apply sign
+        if sign == 0 {
+            -magnitude  // Negative: -1 to -5
+        } else {
+            magnitude   // Positive: 1 to 5
+        }
+    } else {
+        // Fallback if RNG not initialized
+        1
+    }
+}
+
+// Function to generate random direction (true = right, false = left) using oorandom
+pub fn random_direction() -> bool {
+    if let Some(rng) = &mut *RNG.lock() {
+        // Generate 0 or 1
+        (rng.rand_u32() % 2) == 1
+    } else {
+        // Fallback if RNG not initialized
+        true
+    }
+}
+
 // Will handle drawing initial state and setting up game objects
 fn start() {
+    // Initialize RNG
+    let seed = 69;
+    *RNG.lock() = Some(Rand32::new(seed));
 
     // Access the static frame_info (Static variable was assigned value in kernel_main)
     let frame_info = unsafe { 
@@ -408,6 +506,11 @@ fn start() {
 // Will handle updating the game state. This will mostly deal with ball movement and score updating
 fn tick() {
 
+    // Check if the ball has gone out of bounds
+    if let Some(ball) = &mut *BALL.lock() {
+        ball.check_score();
+    }
+
     // Check collision
     if let Some(ball) = &mut *BALL.lock() {
         if let Some(player1) = &mut *PLAYER1.lock() {
@@ -432,9 +535,6 @@ fn tick() {
             screenwriter().draw_pixel(frame_info.width / 2, i, 0xff, 0xff, 0xff);
         }
     }
-
-    // Check if the ball has gone out of bounds
-
 
 
 }

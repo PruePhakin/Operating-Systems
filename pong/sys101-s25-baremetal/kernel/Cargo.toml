@@ -16,3 +16,6 @@ acpi = "5.1.0"
 
 lazy_static = { version = "1.5", features = ["spin_no_std"] }
 
+# Random number generator for Pong game
+oorandom = "11.1.3"
+
