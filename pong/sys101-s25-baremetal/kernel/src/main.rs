@@ -127,6 +127,8 @@ use spin::Mutex;
 // Random number generator crate
 use oorandom::Rand32;
 
+
+
 // Player 
 pub struct PLAYER {
     anchor_point_x: usize,
@@ -257,7 +259,7 @@ impl BALL {
         let ball_bottom = self.anchor_point_y + (self.hitbox_y / 2);
         
         // For a STEP of 5, we need a larger buffer to catch collisions
-        let collision_buffer = 5;
+        let collision_buffer = STEP;
 
         // Check collision with player 1
         let p1_left = player1.anchor_point_x;
@@ -327,8 +329,13 @@ impl BALL {
             }
         }
 
+
+        let frame_info = unsafe { 
+            FRAME_INFO.expect("Frame info not initialized")
+        }; 
+
         // Check collision with bottom of screen
-        if ball_bottom >= 800 - collision_buffer {
+        if ball_bottom >= frame_info.height - collision_buffer {
             // Only bounce if ball is moving downward
             if self.trajectory_gradient > 0 {
                 // Clear any artifacts
@@ -338,7 +345,7 @@ impl BALL {
                 self.trajectory_gradient = -self.trajectory_gradient;
                 
                 // Ensure the ball doesn't get stuck at the bottom boundary
-                self.anchor_point_y = 800 - (self.hitbox_y / 2) - collision_buffer * 2;
+                self.anchor_point_y = frame_info.height - (self.hitbox_y / 2) - collision_buffer * 2;
                 
                 // Redraw at new position
                 self.draw_ball();
@@ -399,8 +406,12 @@ impl BALL {
 
         }
 
+        let frame_info = unsafe { 
+            FRAME_INFO.expect("Frame info not initialized")
+        };
+
         // Check collision with right of screen
-        if ball_right >= 1280 - collision_buffer {
+        if ball_right >= frame_info.width - collision_buffer {
             // Player 2 scores
             if let Some(player2) = &mut *PLAYER2.lock() {
                 player2.score += 1;
@@ -430,7 +441,6 @@ static mut FRAME_INFO: Option<FrameBufferInfo> = None;
 static PLAYER1: Mutex<Option<PLAYER>> = Mutex::new(None);
 static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
 static BALL: Mutex<Option<BALL>> = Mutex::new(None);
-
 
 static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
 
@@ -469,7 +479,7 @@ pub fn random_direction() -> bool {
 // Will handle drawing initial state and setting up game objects
 fn start() {
     // Initialize RNG
-    let seed = 69;
+    let seed = 69420;
     *RNG.lock() = Some(Rand32::new(seed));
 
     // Access the static frame_info (Static variable was assigned value in kernel_main)
@@ -477,7 +487,7 @@ fn start() {
         FRAME_INFO.expect("Frame info not initialized")
     };
 
-    // print out screen size 1280x800
+    // print out screen size (For here its 1280x800)
     writeln!(serial(), "Screen size: {}x{}", frame_info.width, frame_info.height).unwrap();
 
     // Draw dotted center line
