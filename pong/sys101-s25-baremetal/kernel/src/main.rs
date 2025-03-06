@@ -51,7 +51,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let frame_info = boot_info.framebuffer.as_ref().unwrap().info();
     // Store frame_info in static variable
     unsafe {
-        FRAME_INFO = Some(frame_info.clone());
+        FRAME_BUFFER_INFO = Some(frame_info.clone());
     }
     let framebuffer = boot_info.framebuffer.as_mut().unwrap();
     screen::init(framebuffer);
@@ -126,6 +126,18 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 use spin::Mutex;
 // Random number generator crate
 use oorandom::Rand32;
+// Determines how far the ball will move per tick
+static BALL_STEP : usize = 5;
+// Determines the buffer for player movement to avoid overflowing screen memory
+static PLAYER_STEP : usize = 10;
+// Static variable to store frame buffer info
+static mut FRAME_BUFFER_INFO: Option<FrameBufferInfo> = None;
+// Mutex to store player object information (Don't modify objects directly using this, only for information retrieval)
+static PLAYER1: Mutex<Option<PLAYER>> = Mutex::new(None);
+static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
+static BALL: Mutex<Option<BALL>> = Mutex::new(None);
+// Store random number generator
+static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
 
 
 
@@ -162,8 +174,11 @@ impl PLAYER {
 
     // Move player up
     pub fn move_player_up(&mut self) {
+        let frame_info = unsafe {FRAME_BUFFER_INFO.expect("Frame info not initialized")};
+
         // Stop player from moving out of bounds
-        if self.anchor_point_y == 0{
+        // Add slight buffer to account for different screen sizes
+        if self.anchor_point_y <= 0 + PLAYER_STEP {
             return;
         }
         self.anchor_point_y -= 10;
@@ -177,8 +192,10 @@ impl PLAYER {
 
     // Move player down
     pub fn move_player_down(&mut self) {
+        let frame_info = unsafe {FRAME_BUFFER_INFO.expect("Frame info not initialized")};
         // Stop player from moving out of bounds
-        if self.anchor_point_y == 700 {
+        // Add slight buffer to account for different screen sizes
+        if self.anchor_point_y >= frame_info.height - self.hitbox_y - PLAYER_STEP {
             return;
         }
         self.anchor_point_y += 10;
@@ -193,8 +210,6 @@ impl PLAYER {
 
 }
 
-// Determines how far the ball will move per tick
-static STEP : usize = 5;
 
 // Ball
 // Anchor is center of ball
@@ -259,7 +274,7 @@ impl BALL {
         let ball_bottom = self.anchor_point_y + (self.hitbox_y / 2);
         
         // For a STEP of 5, we need a larger buffer to catch collisions
-        let collision_buffer = STEP;
+        let collision_buffer = BALL_STEP;
 
         // Check collision with player 1
         let p1_left = player1.anchor_point_x;
@@ -331,7 +346,7 @@ impl BALL {
 
 
         let frame_info = unsafe { 
-            FRAME_INFO.expect("Frame info not initialized")
+            FRAME_BUFFER_INFO.expect("Frame info not initialized")
         }; 
 
         // Check collision with bottom of screen
@@ -361,9 +376,9 @@ impl BALL {
 
         // Move horizontally based on direction
         if self.axis_direction {
-            self.anchor_point_x += STEP; 
+            self.anchor_point_x += BALL_STEP; 
         } else {
-            self.anchor_point_x -= STEP;
+            self.anchor_point_x -= BALL_STEP;
         }
         
         // Move vertically based on gradient (always add gradient regardless of direction)
@@ -383,7 +398,7 @@ impl BALL {
     pub fn check_score(&mut self) {
         let ball_left = self.anchor_point_x - (self.hitbox_x / 2);
         let ball_right = self.anchor_point_x + (self.hitbox_x / 2);
-        let collision_buffer = STEP;
+        let collision_buffer = BALL_STEP;
 
 
         // Check collision with left of screen
@@ -407,7 +422,7 @@ impl BALL {
         }
 
         let frame_info = unsafe { 
-            FRAME_INFO.expect("Frame info not initialized")
+            FRAME_BUFFER_INFO.expect("Frame info not initialized")
         };
 
         // Check collision with right of screen
@@ -435,14 +450,6 @@ impl BALL {
 }
 
 
-
-// Static variable to store frame buffer info
-static mut FRAME_INFO: Option<FrameBufferInfo> = None;
-static PLAYER1: Mutex<Option<PLAYER>> = Mutex::new(None);
-static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
-static BALL: Mutex<Option<BALL>> = Mutex::new(None);
-
-static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
 
 // Function to generate random numbers in range [-5, -1] or [1, 5] using oorandom
 pub fn random_gradient() -> i32 {
@@ -484,7 +491,7 @@ fn start() {
 
     // Access the static frame_info (Static variable was assigned value in kernel_main)
     let frame_info = unsafe { 
-        FRAME_INFO.expect("Frame info not initialized")
+        FRAME_BUFFER_INFO.expect("Frame info not initialized")
     };
 
     // print out screen size (For here its 1280x800)
@@ -539,7 +546,7 @@ fn tick() {
 
     // Access the static frame_info (Static variable was assigned value in kernel_main)
     let frame_info = unsafe { 
-        FRAME_INFO.expect("Frame info not initialized")
+        FRAME_BUFFER_INFO.expect("Frame info not initialized")
     };
     // Redraw dotted center line
     for i in 0..frame_info.height {
