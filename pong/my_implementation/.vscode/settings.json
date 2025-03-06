@@ -1,5 +1,0 @@
-// To ensure vscode uses the correct target for the rust-analyzer
-{   
-    "rust-analyzer.check.allTargets": false,
-    "rust-analyzer.cargo.target": "x86_64-unknown-none"
-}
