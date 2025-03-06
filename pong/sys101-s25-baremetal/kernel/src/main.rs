@@ -498,8 +498,8 @@ fn start() {
     }
 
     // Initialize game objects
-    *PLAYER1.lock() = Some(PLAYER::new(70, 350));
-    *PLAYER2.lock() = Some(PLAYER::new(1200, 350));
+    *PLAYER1.lock() = Some(PLAYER::new(20, frame_info.height / 2));
+    *PLAYER2.lock() = Some(PLAYER::new(frame_info.width - 20, frame_info.height / 2));
     *BALL.lock() = Some(BALL::new());
 
     // Draw game objects
