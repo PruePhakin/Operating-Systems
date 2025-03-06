@@ -418,6 +418,8 @@ impl BALL {
             self.draw_ball();
         }
 
+        writeln!(serial(), "Player 1: {} Player 2: {}", PLAYER1.lock().as_ref().unwrap().score, PLAYER2.lock().as_ref().unwrap().score).unwrap();
+
     }
 }
 

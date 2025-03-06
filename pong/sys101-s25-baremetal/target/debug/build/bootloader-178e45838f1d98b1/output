@@ -1,1 +1,0 @@
-cargo:rustc-env=UEFI_BOOTLOADER_PATH=/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/debug/build/bootloader-178e45838f1d98b1/out/bin/bootloader-x86_64-uefi.efi

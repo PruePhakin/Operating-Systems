@@ -1,7 +1,7 @@
 error[E0463]: can't find crate for `std`
   |
   = note: the `x86_64-unknown-none` target may not support the standard library
-  = note: `std` is required by `autocfg_3820d3bdeb862885_0` because it does not declare `#![no_std]`
+  = note: `std` is required by `autocfg_c895c0696bf44d19_0` because it does not declare `#![no_std]`
   = help: consider building the standard library from source with `cargo build -Zbuild-std`
 
 error: aborting due to 1 previous error

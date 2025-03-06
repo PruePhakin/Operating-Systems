@@ -851,6 +851,7 @@ dependencies = [
  "bootloader_api",
  "lazy_static",
  "noto-sans-mono-bitmap",
+ "oorandom",
  "pc-keyboard",
  "spin",
  "uart_16550",
@@ -1000,6 +1001,12 @@ name = "once_cell"
 version = "1.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "945462a4b81e43c4e3ba96bd7b49d834c6f61198356aa858733bc4acf3cbe62e"
+
+[[package]]
+name = "oorandom"
+version = "11.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b410bbe7e14ab526a0e86877eb47c6996a2bd7746f027ba551028c925390e4e9"
 
 [[package]]
 name = "overload"

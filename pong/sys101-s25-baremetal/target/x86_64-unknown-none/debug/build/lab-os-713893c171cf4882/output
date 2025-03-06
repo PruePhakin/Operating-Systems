@@ -1,0 +1,1 @@
+cargo:rustc-env=UEFI_PATH=/home/pruephakin/Operating-Systems/pong/sys101-s25-baremetal/target/x86_64-unknown-none/debug/build/lab-os-713893c171cf4882/out/uefi.img
