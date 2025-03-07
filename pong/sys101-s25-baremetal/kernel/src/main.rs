@@ -147,19 +147,26 @@ pub struct PLAYER {
     anchor_point_y: usize,
     hitbox_x: usize,
     hitbox_y: usize,
+
+    // Used to keep track of player score and position on screen(Top left corner of score)
     score: i32,
+    score_anchor_x: usize,
+    score_anchor_y: usize,
 }
+
 impl PLAYER {
 
     // Initialize player
     // Anchor is top left corner of player
-    pub fn new(anchor_x: usize, anchor_y: usize) -> Self {
+    pub fn new(anchor_x: usize, anchor_y: usize, score_x: usize, score_y: usize) -> Self {
         PLAYER {
             anchor_point_x: anchor_x,
             anchor_point_y: anchor_y,
             hitbox_x: 10,
             hitbox_y: 100,
             score: 0,
+            score_anchor_x: score_x,
+            score_anchor_y: score_y,
         }
     }
 
@@ -174,7 +181,6 @@ impl PLAYER {
 
     // Move player up
     pub fn move_player_up(&mut self) {
-        let frame_info = unsafe {FRAME_BUFFER_INFO.expect("Frame info not initialized")};
 
         // Stop player from moving out of bounds
         // Add slight buffer to account for different screen sizes
@@ -205,6 +211,107 @@ impl PLAYER {
             for y in self.anchor_point_y-10..self.anchor_point_y {
                 screenwriter().draw_pixel(x, y, 0, 0, 0);
             }
+        }
+    }
+
+    // Draw player score and update
+    pub fn update_score(&self) {
+        let score = self.score;
+        let digit_size = 10;
+        let score_x = self.score_anchor_x;
+        let score_y = self.score_anchor_y;
+        
+        // Clear previous score area
+        for i in 0..(digit_size*3) {
+            for j in 0..(digit_size*4) {
+                screenwriter().draw_pixel(score_x + i, score_y + j, 0, 0, 0);
+            }
+        }
+        
+        // Draw the appropriate digit based on score
+        match score {
+            0 => {
+                // Draw number 0 (outline of a rectangle)
+                for i in 0..(digit_size*3) {
+                    for j in 0..(digit_size*4) {
+                        if i == 0 || i == digit_size*3 - 1 || j == 0 || j == digit_size*4 - 1 {
+                            screenwriter().draw_pixel(score_x + i, score_y + j, 0xff, 0xff, 0xff);
+                        }
+                    }
+                }
+            },
+            1 => {
+                // Draw the number 1 (vertical line on right with a diagonal and base)
+                // Vertical line
+                for j in 0..(digit_size*4) {
+                    screenwriter().draw_pixel(score_x + digit_size*2, score_y + j, 0xff, 0xff, 0xff);
+                }
+            },
+            2 => {
+                // Draw the number 2
+                // Top horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y, 0xff, 0xff, 0xff);
+                }
+                // Right vertical (top half)
+                for j in 0..digit_size*2 {
+                    screenwriter().draw_pixel(score_x + digit_size*3 - 1, score_y + j, 0xff, 0xff, 0xff);
+                }
+                // Middle horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*2, 0xff, 0xff, 0xff);
+                }
+                // Left vertical (bottom half)
+                for j in digit_size*2..digit_size*4 {
+                    screenwriter().draw_pixel(score_x, score_y + j, 0xff, 0xff, 0xff);
+                }
+                // Bottom horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*4 - 1, 0xff, 0xff, 0xff);
+                }
+            },
+            3 => {
+                // Draw the number 3
+                // Top horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y, 0xff, 0xff, 0xff);
+                }
+                // Right vertical (full)
+                for j in 0..digit_size*4 {
+                    screenwriter().draw_pixel(score_x + digit_size*3 - 1, score_y + j, 0xff, 0xff, 0xff);
+                }
+                // Middle horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*2, 0xff, 0xff, 0xff);
+                }
+                // Bottom horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*4 - 1, 0xff, 0xff, 0xff);
+                }
+            },
+            _ => {
+                // For scores above 3, just display the number 3
+                // Draw the number 3
+                // Top horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y, 0xff, 0xff, 0xff);
+                }
+                // Right vertical (full)
+                for j in 0..digit_size*4 {
+                    screenwriter().draw_pixel(score_x + digit_size*3 - 1, score_y + j, 0xff, 0xff, 0xff);
+                }
+                // Middle horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*2, 0xff, 0xff, 0xff);
+                }
+                // Bottom horizontal
+                for i in 0..(digit_size*3) {
+                    screenwriter().draw_pixel(score_x + i, score_y + digit_size*4 - 1, 0xff, 0xff, 0xff);
+                }
+                
+                // Log that we've reached a score above what we can display
+                writeln!(serial(), "Score above display limit for player: {}", score).unwrap();
+            },
         }
     }
 
@@ -505,8 +612,12 @@ fn start() {
     }
 
     // Initialize game objects
-    *PLAYER1.lock() = Some(PLAYER::new(20, frame_info.height / 2));
-    *PLAYER2.lock() = Some(PLAYER::new(frame_info.width - 20, frame_info.height / 2));
+    // Player 1 on left side
+    // Player 2 on right side
+    // Ball in center
+    // Playerscore position is set to draw on the opposite side of the player
+    *PLAYER1.lock() = Some(PLAYER::new(20, frame_info.height / 2, frame_info.width * 3 / 4, frame_info.height / 8));
+    *PLAYER2.lock() = Some(PLAYER::new(frame_info.width - 30, frame_info.height / 2, frame_info.width / 4, frame_info.height / 8));
     *BALL.lock() = Some(BALL::new());
 
     // Draw game objects
@@ -520,6 +631,14 @@ fn start() {
         ball.draw_ball();
     }
 
+    // Initialize scores for both players
+    if let Some(player1) = &mut *PLAYER1.lock() {
+        player1.update_score();
+    }
+    if let Some(player2) = &mut *PLAYER2.lock() {
+        player2.update_score();
+    }
+
 }
 
 // Will handle updating the game state. This will mostly deal with ball movement and score updating
@@ -528,6 +647,14 @@ fn tick() {
     // Check if the ball has gone out of bounds
     if let Some(ball) = &mut *BALL.lock() {
         ball.check_score();
+    }
+
+    // Update scores
+    if let Some(player1) = &mut *PLAYER1.lock() {
+        player1.update_score();
+    }
+    if let Some(player2) = &mut *PLAYER2.lock() {
+        player2.update_score();
     }
 
     // Check collision
