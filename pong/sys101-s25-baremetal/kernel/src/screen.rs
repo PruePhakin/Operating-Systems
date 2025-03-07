@@ -105,6 +105,38 @@ impl ScreenWriter {
         self.x_pos += rendered_char.width();
     }
 
+    /// Writes text centered in the middle of the screen
+    pub fn write_centered(&mut self, text: &str) {
+        // Calculate text dimensions
+        let char_width = 8; // Approximate width of a character in the font
+        let char_height = Size16 as usize;
+        
+        // Calculate total text width and height
+        let text_width = text.len() * char_width;
+        let text_height = char_height;
+        
+        // Calculate starting positions to center the text
+        let start_x = (self.width() - text_width) / 2;
+        let start_y = (self.height() - text_height) / 2;
+        
+        // Store current position
+        let old_x = self.x_pos;
+        let old_y = self.y_pos;
+        
+        // Set position to centered coordinates
+        self.x_pos = start_x;
+        self.y_pos = start_y;
+        
+        // Write the text
+        for c in text.chars() {
+            self.write_char(c);
+        }
+        
+        // Restore original position
+        self.x_pos = old_x;
+        self.y_pos = old_y;
+    }
+
     pub fn write_pixel(&mut self, x: usize, y: usize, intensity: u8) {
         let pixel_offset = y * usize::from(self.info.stride) + x;
         let color = match self.info.pixel_format {

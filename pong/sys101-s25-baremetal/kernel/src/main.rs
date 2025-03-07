@@ -14,6 +14,7 @@ mod gdt;
 
 use acpi::handler;
 use alloc::boxed::Box;
+use screen::ScreenWriter;
 use x86_64::structures::paging::frame;
 use core::fmt::Write;
 use core::panic::Location;
@@ -138,6 +139,8 @@ static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
 static BALL: Mutex<Option<BALL>> = Mutex::new(None);
 // Store random number generator
 static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
+// Static variable to track if the game has ended
+static GAME_OVER: Mutex<bool> = Mutex::new(false);
 
 
 
@@ -556,7 +559,36 @@ impl BALL {
     }
 }
 
+// Checks if a player has reached the score limit and stops game, displaying the winner, show restart option
+pub fn check_game_end() -> bool {
+    let mut game_over = *GAME_OVER.lock();
+    
+    if game_over {
+        return true;
+    }
 
+    if let Some(player1) = &*PLAYER1.lock() {
+        if player1.score >= 3 {
+            // Player 1 wins
+            screenwriter().clear(); // Clear the screen
+            screenwriter().write_centered("Player 1 wins! Press r to restart");
+            *GAME_OVER.lock() = true;
+            game_over = true;
+        }
+    }
+    
+    if let Some(player2) = &*PLAYER2.lock() {
+        if player2.score >= 3 && !game_over {
+            // Player 2 wins
+            screenwriter().clear(); // Clear the screen
+            screenwriter().write_centered("Player 2 wins! Press r to restart");
+            *GAME_OVER.lock() = true;
+            game_over = true;
+        }
+    }
+    
+    game_over
+}
 
 // Function to generate random numbers in range [-5, -1] or [1, 5] using oorandom
 pub fn random_gradient() -> i32 {
@@ -588,6 +620,23 @@ pub fn random_direction() -> bool {
         // Fallback if RNG not initialized
         true
     }
+}
+
+// Function to reset the entire game
+pub fn reset_game() {
+    // Clear the screen
+    screenwriter().clear();
+    
+    // Reset game over flag
+    *GAME_OVER.lock() = false;
+    
+    // Reset all game objects
+    *PLAYER1.lock() = None;
+    *PLAYER2.lock() = None;
+    *BALL.lock() = None;
+    
+    // Start a new game
+    start();
 }
 
 // Will handle drawing initial state and setting up game objects
@@ -643,7 +692,13 @@ fn start() {
 
 // Will handle updating the game state. This will mostly deal with ball movement and score updating
 fn tick() {
+    // Check if game is over
+    if *GAME_OVER.lock() {
+        // Game is paused - don't update anything
+        return;
+    }
 
+    // Original game logic stays the same
     // Check if the ball has gone out of bounds
     if let Some(ball) = &mut *BALL.lock() {
         ball.check_score();
@@ -657,66 +712,84 @@ fn tick() {
         player2.update_score();
     }
 
-    // Check collision
-    if let Some(ball) = &mut *BALL.lock() {
-        if let Some(player1) = &mut *PLAYER1.lock() {
-            if let Some(player2) = &mut *PLAYER2.lock() {
-                ball.check_collision(player1, player2);
+    // Check if there is a winner
+    check_game_end();
+
+    // Only continue with game updates if the game hasn't ended
+    if !*GAME_OVER.lock() {
+        // Check collision
+        if let Some(ball) = &mut *BALL.lock() {
+            if let Some(player1) = &mut *PLAYER1.lock() {
+                if let Some(player2) = &mut *PLAYER2.lock() {
+                    ball.check_collision(player1, player2);
+                }
+            }
+        }
+
+        // Update ball position
+        if let Some(ball) = &mut *BALL.lock() {
+            ball.update_ball();
+        }
+
+        // Access the static frame_info
+        let frame_info = unsafe { 
+            FRAME_BUFFER_INFO.expect("Frame info not initialized")
+        };
+        
+        // Redraw dotted center line
+        for i in 0..frame_info.height {
+            if i % 10 == 0 {
+                screenwriter().draw_pixel(frame_info.width / 2, i, 0xff, 0xff, 0xff);
             }
         }
     }
-
-    // Update ball position
-    if let Some(ball) = &mut *BALL.lock() {
-        ball.update_ball();
-    }
-
-    // Access the static frame_info (Static variable was assigned value in kernel_main)
-    let frame_info = unsafe { 
-        FRAME_BUFFER_INFO.expect("Frame info not initialized")
-    };
-    // Redraw dotted center line
-    for i in 0..frame_info.height {
-        if i % 10 == 0 {
-            screenwriter().draw_pixel(frame_info.width / 2, i, 0xff, 0xff, 0xff);
-        }
-    }
-
-
 }
 
 // Will mostly deal with user input to move the players
 fn key(key: DecodedKey) {
     match key {
-        // Move player 1 up
-        DecodedKey::Unicode('w') => {
-            if let Some(player1) = &mut *PLAYER1.lock() {
-                player1.move_player_up();
-                player1.draw_player();
+        // Handle restart
+        DecodedKey::Unicode('r') => {
+            if *GAME_OVER.lock() {
+                // Game is over, restart it
+                reset_game();
             }
         },
-        // Move player 1 down
-        DecodedKey::Unicode('s') => {
-            if let Some(player1) = &mut *PLAYER1.lock() {
-                player1.move_player_down();
-                player1.draw_player();
+        // Only process other keys if game is not over
+        _ if !*GAME_OVER.lock() => {
+            match key {
+                // Move player 1 up
+                DecodedKey::Unicode('w') => {
+                    if let Some(player1) = &mut *PLAYER1.lock() {
+                        player1.move_player_up();
+                        player1.draw_player();
+                    }
+                },
+                // Move player 1 down
+                DecodedKey::Unicode('s') => {
+                    if let Some(player1) = &mut *PLAYER1.lock() {
+                        player1.move_player_down();
+                        player1.draw_player();
+                    }
+                },
+                // Move player 2 up
+                DecodedKey::RawKey(KeyCode::ArrowUp) => {
+                    if let Some(player2) = &mut *PLAYER2.lock() {
+                        player2.move_player_up();
+                        player2.draw_player();
+                    }
+                },
+                // Move player 2 down  
+                DecodedKey::RawKey(KeyCode::ArrowDown) => {
+                    if let Some(player2) = &mut *PLAYER2.lock() {
+                        player2.move_player_down();
+                        player2.draw_player();
+                    }
+                },
+                DecodedKey::Unicode(character) => write!(Writer, "{}", character).unwrap(),
+                DecodedKey::RawKey(key) => write!(Writer, "{:?}", key).unwrap(),
             }
         },
-        // Move player 2 up
-        DecodedKey::RawKey(KeyCode::ArrowUp) => {
-            if let Some(player2) = &mut *PLAYER2.lock() {
-                player2.move_player_up();
-                player2.draw_player();
-            }
-        },
-        // Move player 2 down  
-        DecodedKey::RawKey(KeyCode::ArrowDown) => {
-            if let Some(player2) = &mut *PLAYER2.lock() {
-                player2.move_player_down();
-                player2.draw_player();
-            }
-        },
-        DecodedKey::Unicode(character) => write!(Writer, "{}", character).unwrap(),
-        DecodedKey::RawKey(key) => write!(Writer, "{:?}", key).unwrap(),
+        _ => {}, // Ignore other keys when game is over (except 'r')
     }
 }
