@@ -98,9 +98,8 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
      *   writeln!(Writer, "{x:#p} {:?}", *x).unwrap();
      *   writeln!(Writer, "{y:#p} {:?}", *y).unwrap();
      *   
-     *   writeln!(serial(), "Starting kernel...").unwrap();
      */
-
+    writeln!(serial(), "Starting kernel...").unwrap();
 
     start();
 
@@ -134,9 +133,9 @@ static PLAYER_STEP : usize = 10;
 // Static variable to store frame buffer info
 static mut FRAME_BUFFER_INFO: Option<FrameBufferInfo> = None;
 // Mutex to store player object information (Don't modify objects directly using this, only for information retrieval)
-static PLAYER1: Mutex<Option<PLAYER>> = Mutex::new(None);
-static PLAYER2: Mutex<Option<PLAYER>> = Mutex::new(None);
-static BALL: Mutex<Option<BALL>> = Mutex::new(None);
+static PLAYER1: Mutex<Option<Box<PLAYER>>> = Mutex::new(None);
+static PLAYER2: Mutex<Option<Box<PLAYER>>> = Mutex::new(None);
+static BALL: Mutex<Option<Box<BALL>>> = Mutex::new(None);
 // Store random number generator
 static RNG: Mutex<Option<Rand32>> = Mutex::new(None);
 // Static variable to track if the game has ended
@@ -334,11 +333,15 @@ pub struct BALL {
 }
 impl BALL {
 
+
     // Initialize ball
     pub fn new() -> BALL {
+        // Get screen size
+        let frame_info = unsafe {FRAME_BUFFER_INFO.expect("Frame info not initialized")};
+
         BALL {
-            anchor_point_x: 640,
-            anchor_point_y: 400,
+            anchor_point_x: frame_info.width / 2,
+            anchor_point_y: frame_info.height / 2,
             hitbox_x: 9,
             hitbox_y: 9,
 
@@ -665,9 +668,9 @@ fn start() {
     // Player 2 on right side
     // Ball in center
     // Playerscore position is set to draw on the opposite side of the player
-    *PLAYER1.lock() = Some(PLAYER::new(20, frame_info.height / 2, frame_info.width * 3 / 4, frame_info.height / 8));
-    *PLAYER2.lock() = Some(PLAYER::new(frame_info.width - 30, frame_info.height / 2, frame_info.width / 4, frame_info.height / 8));
-    *BALL.lock() = Some(BALL::new());
+    *PLAYER1.lock() = Some(Box::new(PLAYER::new(20, frame_info.height / 2, frame_info.width * 3 / 4, frame_info.height / 8)));
+    *PLAYER2.lock() = Some(Box::new(PLAYER::new(frame_info.width - 30, frame_info.height / 2, frame_info.width / 4, frame_info.height / 8)));
+    *BALL.lock() = Some(Box::new(BALL::new()));
 
     // Draw game objects
     if let Some(player1) = &mut *PLAYER1.lock() {
@@ -786,8 +789,8 @@ fn key(key: DecodedKey) {
                         player2.draw_player();
                     }
                 },
-                DecodedKey::Unicode(character) => write!(Writer, "{}", character).unwrap(),
-                DecodedKey::RawKey(key) => write!(Writer, "{:?}", key).unwrap(),
+                DecodedKey::Unicode(character) => write!(serial(), "{}", character).unwrap(),
+                DecodedKey::RawKey(key) => write!(serial(), "{:?}", key).unwrap(),
             }
         },
         _ => {}, // Ignore other keys when game is over (except 'r')
